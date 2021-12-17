@@ -1,5 +1,5 @@
 import { initializeApp } from "firebase/app";
-import { getAnalytics } from "firebase/analytics";
+// import { getAnalytics } from "firebase/analytics";
 import firebaseConfig from "./firebaseConfig";
 import {
   getAuth,
@@ -13,7 +13,7 @@ import { getStorage, ref } from "firebase/storage";
 
 // Initialize Firebase
 const app = initializeApp(firebaseConfig);
-const analytics = getAnalytics(app);
+// const analytics = getAnalytics(app);
 
 export const auth = getAuth(app);
 const provider = new GoogleAuthProvider();
@@ -25,7 +25,7 @@ export const login = async () => {
     .then((res) => {
       // console.log(res);
       // user.set(res.user);
-      logEvent(analytics, "google_signin");
+      // logEvent(analytics, "google_signin");
       console.debug("signed in", res);
     })
     .catch((err) => console.error(err));

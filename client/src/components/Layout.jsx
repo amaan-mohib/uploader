@@ -1,14 +1,14 @@
 import { FileUploadOutlined } from "@mui/icons-material";
 import { AppBar, Avatar, IconButton, Toolbar } from "@mui/material";
 import { Box } from "@mui/system";
-import { useRouter } from "next/router";
-import { useEffect } from "react";
+// import { useRouter } from "next/router";
+import React, { useEffect } from "react";
 import { useAuth } from "../context/AuthProvider";
 import Upload from "./Upload";
 
 const Layout = ({ children }) => {
   const { user, loading } = useAuth();
-  const router = useRouter();
+  // const router = useRouter();
   // useEffect(() => {
   //   if (!loading && !user) {
   //     router.push("/login");

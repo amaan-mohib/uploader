@@ -1,4 +1,5 @@
-import { Add } from "@mui/icons-material";
+import React, { useState } from "react";
+import QrReader from "react-qr-reader";
 import {
   Button,
   Dialog,
@@ -7,19 +8,19 @@ import {
   DialogTitle,
   Fab,
 } from "@mui/material";
-import Qrcode from "qrcode.react";
-import { useEffect, useState } from "react";
-import short from "short-uuid";
+import { QrCodeScannerOutlined } from "@mui/icons-material";
 
-const Upload = () => {
+const Scanner = () => {
+  const [result, setResult] = useState("No result");
   const [open, setOpen] = useState(false);
-
-  const [uuid, setUuid] = useState("");
-  useEffect(() => {
-    // const translator=short();
-    const newUuid = short.uuid();
-    setUuid(newUuid);
-  }, []);
+  const handleScan = (data) => {
+    if (data) {
+      setResult(data);
+    }
+  };
+  const handleError = (err) => {
+    console.error(err);
+  };
   const handleClose = () => {
     setOpen(!open);
   };
@@ -31,20 +32,21 @@ const Upload = () => {
         onClick={() => {
           setOpen(true);
         }}>
-        <Add sx={{ mr: 1 }} />
-        Upload
+        <QrCodeScannerOutlined sx={{ mr: 1 }} />
+        Scan
       </Fab>
       <Fab
         className="fab-m"
         onClick={() => {
           setOpen(true);
         }}>
-        <Add />
+        <QrCodeScannerOutlined />
       </Fab>
       <Dialog open={open} onClose={handleClose}>
         <DialogTitle>Upload</DialogTitle>
         <DialogContent>
-          <Qrcode value={uuid} size={256} />
+          <QrReader onScan={handleScan} onError={handleError} />
+          <p>{result}</p>
         </DialogContent>
         <DialogActions>
           <Button onClick={handleClose}>Close</Button>
@@ -54,4 +56,4 @@ const Upload = () => {
   );
 };
 
-export default Upload;
+export default Scanner;
