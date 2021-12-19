@@ -31,6 +31,10 @@ export const login = async () => {
     .catch((err) => console.error(err));
 };
 
+export const logout = () => {
+  signOut(auth).catch((err) => console.error(err));
+};
+
 //Firestore
 export const db = getFirestore();
 

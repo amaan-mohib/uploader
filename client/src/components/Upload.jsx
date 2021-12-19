@@ -17,6 +17,7 @@ import Scanner from "./Scanner";
 const Upload = () => {
   const [open, setOpen] = useState(false);
   const [webCam, setWebCam] = useState(false);
+  const [isQr, setQr] = useState(false);
   const [uuid, setUuid] = useState("");
   useEffect(() => {
     const detectWebcam = (callback) => {
@@ -37,6 +38,10 @@ const Upload = () => {
   const handleClose = () => {
     setOpen(!open);
   };
+  const handleOpen = () => {
+    setOpen(true);
+    setQr(true);
+  };
 
   return (
     <div>
@@ -44,30 +49,28 @@ const Upload = () => {
         className="fab"
         variant="extended"
         color="primary"
-        onClick={() => {
-          setOpen(true);
-        }}>
+        onClick={handleOpen}>
         <Add sx={{ mr: 1 }} />
         Upload
       </Fab>
-      <Fab
-        className="fab-m"
-        color="primary"
-        onClick={() => {
-          setOpen(true);
-        }}>
+      <Fab className="fab-m" color="primary" onClick={handleOpen}>
         <Add />
       </Fab>
       {webCam && <Scanner />}
-      <QRDialog open={open} uuid={uuid} handleClose={handleClose} />
+      <QRDialog open={open} uuid={uuid} handleClose={handleClose} isQr={isQr} />
     </div>
   );
 };
 
-const QRDialog = ({ open = false, handleClose = () => {}, uuid = "" }) => {
+const QRDialog = ({
+  open = false,
+  handleClose = () => {},
+  uuid = "",
+  isQr = false,
+}) => {
   const { user } = useAuth();
   useEffect(() => {
-    if (socket) {
+    if (socket && uuid && isQr) {
       console.log(socket.id);
       socket.emit(
         "join",
@@ -85,7 +88,7 @@ const QRDialog = ({ open = false, handleClose = () => {}, uuid = "" }) => {
         }
       );
     }
-  }, [socket]);
+  }, [socket, uuid, isQr]);
   return (
     <Dialog open={open} onClose={handleClose}>
       <DialogTitle>Upload</DialogTitle>

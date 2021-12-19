@@ -9,13 +9,33 @@ import {
   Fab,
 } from "@mui/material";
 import { QrCodeScannerOutlined } from "@mui/icons-material";
+import socket from "../utils/socket";
+import { useAuth } from "../context/AuthProvider";
 
 const Scanner = () => {
-  const [result, setResult] = useState("No result");
+  const { user } = useAuth();
+  const [result, setResult] = useState("");
   const [open, setOpen] = useState(false);
   const handleScan = (data) => {
     if (data) {
-      setResult(data);
+      if (socket && data) {
+        socket.emit(
+          "join",
+          {
+            uuid: data,
+            user: {
+              sid: socket.id,
+              uid: user.uid,
+              host: false,
+              info: navigator.userAgentData,
+            },
+          },
+          (error) => {
+            if (error) console.error(error);
+          }
+        );
+        setResult(data);
+      }
     }
   };
   const handleError = (err) => {
@@ -45,7 +65,7 @@ const Scanner = () => {
       <Dialog open={open} onClose={handleClose}>
         <DialogTitle>Upload</DialogTitle>
         <DialogContent>
-          <QrReader onScan={handleScan} onError={handleError} />
+          {!result && <QrReader onScan={handleScan} onError={handleError} />}
           <p>{result}</p>
         </DialogContent>
         <DialogActions>

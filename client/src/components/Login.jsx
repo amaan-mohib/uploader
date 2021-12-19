@@ -1,14 +1,17 @@
 import { Google } from "@mui/icons-material";
 import { Button } from "@mui/material";
+import { useLocation, useNavigate } from "react-router-dom";
 import { login } from "../utils/firebase";
 
 const Login = () => {
-  //   const router = useRouter();
+  const navigate = useNavigate();
+  const location = useLocation();
+
+  const from = location.state?.from?.pathname || "/";
 
   const handleClick = () => {
     login().then((res) => {
-      //   console.log(res);
-      //   router.push(router.query.next || "/");
+      navigate(from, { replace: true });
     });
   };
   return (

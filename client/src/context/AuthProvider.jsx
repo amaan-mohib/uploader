@@ -1,6 +1,5 @@
 import { onAuthStateChanged, signOut } from "@firebase/auth";
 import { CircularProgress } from "@mui/material";
-// import { useRouter } from "next/router";
 import React, { createContext, useContext, useEffect, useState } from "react";
 import { auth } from "../utils/firebase";
 
@@ -23,21 +22,10 @@ const AuthProvider = ({ children }) => {
     setLoading(true);
   };
 
-  // const router = useRouter();
   useEffect(() => {
     let unsub = onAuthStateChanged(auth, async (user) => {
       setUser(user);
       setLoading(false);
-      // if (!user) {
-      //   const query =
-      //     window.location.pathname !== "/login"
-      //       ? { next: window.location.pathname }
-      //       : {};
-      //   router.push({
-      //     pathname: "/login",
-      //     query,
-      //   });
-      // }
     });
     return () => {
       clear();

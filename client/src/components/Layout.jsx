@@ -1,12 +1,12 @@
 import { FileUploadOutlined } from "@mui/icons-material";
 import { AppBar, Avatar, IconButton, Toolbar } from "@mui/material";
 import { Box } from "@mui/system";
-// import { useRouter } from "next/router";
-import React, { useEffect } from "react";
+// import React, { useEffect } from "react";
+import { Outlet } from "react-router-dom";
 import { useAuth } from "../context/AuthProvider";
 import Upload from "./Upload";
 
-const Layout = ({ children }) => {
+const Layout = () => {
   const { user, loading } = useAuth();
   // const router = useRouter();
   // useEffect(() => {
@@ -40,7 +40,9 @@ const Layout = ({ children }) => {
         </AppBar>
         {user && <Upload />}
       </Box>
-      <main>{children}</main>
+      <main>
+        <Outlet />
+      </main>
     </div>
   );
 };
