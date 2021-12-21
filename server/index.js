@@ -9,16 +9,8 @@ const io = socketio(server);
 
 app.use(cors());
 let users = {};
-let onlineUsers = {
-  id: {
-    user: {
-      uid: "",
-      host: false,
-      info: "",
-    },
-    uuid: "",
-  },
-};
+let onlineUsers = {};
+
 io.on("connect", (socket) => {
   console.log(`${socket.id} connected`);
   socket.on("join", ({ uuid = "", user = {} }, callback) => {
@@ -30,7 +22,7 @@ io.on("connect", (socket) => {
     users[uuid].push(user);
     console.log(`[${uuid}]: `, users[uuid]);
     io.to(uuid).emit("connected users", {
-      connected: users[uuid],
+      connected: users[uuid].filter((user) => user.host !== true),
     });
     callback();
   });
@@ -47,12 +39,28 @@ io.on("connect", (socket) => {
       console.log(uuid, "newUser: ", newUser);
       users[uuid] = newUser;
       io.to(uuid).emit("connected users", {
-        connected: users[uuid],
+        connected: users[uuid].filter((user) => user.host !== true),
       });
     }
     delete onlineUsers[socket.id];
     console.log(`${socket.id} disconnected due to ${reason}`);
   });
+});
+
+app.get("/", (req, res) => {
+  res.send("Hello there");
+});
+
+app.get("/user/:sid", (req, res) => {
+  const sid = req.params.sid;
+  const result = onlineUsers[sid] ? true : false;
+  res.send(result);
+});
+
+app.get("/is-users/:uuid", (req, res) => {
+  const uuid = req.params.uuid;
+  const result = users[uuid] ? true : false;
+  res.send(result);
 });
 
 server.listen(process.env.PORT || 5000, () =>
