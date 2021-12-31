@@ -22,27 +22,35 @@ io.on("connect", (socket) => {
     users[uuid].push(user);
     console.log(`[${uuid}]: `, users[uuid]);
     io.to(uuid).emit("connected users", {
-      connected: users[uuid].filter((user) => user.host !== true),
+      connected: users[uuid],
     });
     callback();
   });
+  socket.on("send files", ({ uuid, files }, callback) => {
+    io.to(uuid).emit("recieve files", files);
+    callback();
+  });
   socket.on("disconnect", (reason) => {
-    const uuid = onlineUsers[socket.id].uuid;
-    const user = onlineUsers[socket.id].user;
-    if (user.host === true) {
-      io.to(uuid).emit("connected users", {
-        connected: [],
-      });
-      delete users[uuid];
-    } else {
-      let newUser = users[uuid].filter((user) => user.sid !== socket.id);
-      console.log(uuid, "newUser: ", newUser);
-      users[uuid] = newUser;
-      io.to(uuid).emit("connected users", {
-        connected: users[uuid].filter((user) => user.host !== true),
-      });
+    if (onlineUsers[socket.id]) {
+      const uuid = onlineUsers[socket.id].uuid;
+      const user = onlineUsers[socket.id].user;
+      if (user.host === true) {
+        io.to(uuid).emit("connected users", {
+          connected: [],
+        });
+        delete users[uuid];
+      } else {
+        if (users[uuid]) {
+          let newUser = users[uuid].filter((user) => user.sid !== socket.id);
+          console.log(uuid, "newUser: ", newUser);
+          users[uuid] = newUser;
+          io.to(uuid).emit("connected users", {
+            connected: users[uuid],
+          });
+        }
+      }
+      delete onlineUsers[socket.id];
     }
-    delete onlineUsers[socket.id];
     console.log(`${socket.id} disconnected due to ${reason}`);
   });
 });
@@ -61,6 +69,15 @@ app.get("/is-users/:uuid", (req, res) => {
   const uuid = req.params.uuid;
   const result = users[uuid] ? true : false;
   res.send(result);
+});
+
+app.get("/host/:uuid", (req, res) => {
+  const uuid = req.params.uuid;
+  let host = "";
+  users[uuid].forEach((user) => {
+    if (user.host === true) host = user.sid;
+  });
+  res.send(host);
 });
 
 server.listen(process.env.PORT || 5000, () =>
