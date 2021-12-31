@@ -2,6 +2,7 @@ import { onAuthStateChanged, signOut } from "@firebase/auth";
 import { CircularProgress } from "@mui/material";
 import React, { createContext, useContext, useEffect, useState } from "react";
 import { auth } from "../utils/firebase";
+import FolderProvider from "./FolderProvider";
 
 const AuthContext = createContext({
   user: null,
@@ -44,7 +45,20 @@ const AuthProvider = ({ children }) => {
 
   return (
     <AuthContext.Provider value={value}>
-      {loading ? <CircularProgress /> : children}
+      {loading ? (
+        <div
+          style={{
+            width: "100%",
+            height: "100vh",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+          }}>
+          <CircularProgress />
+        </div>
+      ) : (
+        <FolderProvider>{children}</FolderProvider>
+      )}
     </AuthContext.Provider>
   );
 };

@@ -15,19 +15,131 @@ import {
   ListSubheader,
   ListItemAvatar,
   Avatar,
+  LinearProgress,
 } from "@mui/material";
+import { serverTimestamp, setDoc } from "firebase/firestore";
+import { getDownloadURL, uploadBytesResumable } from "firebase/storage";
 import { useState } from "react";
+import { useAuth } from "../context/AuthProvider";
+import { useFolder } from "../context/FolderProvider";
+import { createDocRef, createStorageRef } from "../utils/firebase";
 import { formatSize } from "../utils/format";
+import socket from "../utils/socket";
 
-const UploadComp = () => {
+export const FileIcons = {
+  image: <Image style={{ color: "red" }} />,
+  audio: <AudioFileOutlined style={{ color: "yellowgreen" }} />,
+  video: <VideoFileOutlined style={{ color: "darkorange" }} />,
+  application: <InsertDriveFileOutlined style={{ color: "darkblue" }} />,
+  text: <ArticleOutlined style={{ color: "blue" }} />,
+  "": <InsertDriveFileOutlined style={{ color: "darkblue" }} />,
+};
+const UploadComp = ({ isScanner = false, uuid = "" }) => {
   const [files, setFiles] = useState([]);
-  const FileIcons = {
-    image: <Image style={{ color: "black" }} />,
-    audio: <AudioFileOutlined style={{ color: "black" }} />,
-    video: <VideoFileOutlined style={{ color: "black" }} />,
-    application: <InsertDriveFileOutlined style={{ color: "black" }} />,
-    text: <ArticleOutlined style={{ color: "black" }} />,
-    "": <InsertDriveFileOutlined style={{ color: "black" }} />,
+  const { path, folderId } = useFolder();
+  const { user } = useAuth();
+  const [progress, setProgress] = useState(0);
+  const [error, setError] = useState("");
+  const [uploading, setUploading] = useState(false);
+
+  const handleUpload = () => {
+    let i = 0;
+    setUploading(true);
+    for (i = 0; i < files.length; i++) {
+      if (!(files[i].size > 10485760)) {
+        uploadAsPromise(files[i], isScanner)
+          .then(() => {
+            setProgress(0);
+            if (i == files.length) {
+              setFiles([]);
+              setUploading(false);
+            }
+          })
+          .catch((err) => setError(err));
+      } else {
+        setError(
+          `Did not upload ${files[i].name} because its too large (>10 MB)`
+        );
+      }
+    }
+  };
+  const uploadAsPromise = (file, isScanner) => {
+    return new Promise((resolve, reject) => {
+      const metadata = {
+        contentType: file.type,
+      };
+      const newPath =
+        user.uid + "/" + path[path.length - 1].id.slice(1) + "/" + file.name;
+      const storageRef = createStorageRef(newPath);
+      const uploadTask = uploadBytesResumable(storageRef, file, metadata);
+      uploadTask.on(
+        "state_changed",
+        (snapshot) => {
+          const uploadProgress =
+            (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
+          setProgress(uploadProgress);
+        },
+        (error) => {
+          // https://firebase.google.com/docs/storage/web/handle-errors
+          let ecode = "";
+          switch (error.code) {
+            case "storage/unauthorized":
+              ecode = "User doesn't have permission to access the object";
+              break;
+            case "storage/canceled":
+              ecode = "User canceled the upload";
+              break;
+            case "storage/unknown":
+              ecode = "Unknown error occurred, inspect error.serverResponse";
+              break;
+          }
+          reject(ecode);
+        },
+        () => {
+          getDownloadURL(uploadTask.snapshot.ref)
+            .then(async (downloadURL) => {
+              // console.log("File available at", downloadURL);
+              const fileRef = createDocRef(`users/${user.uid}/files`);
+              await setDoc(fileRef, {
+                id: fileRef.id,
+                name: file.name,
+                type: file.type,
+                size: file.size,
+                url: downloadURL,
+                parentId: folderId,
+                path,
+                owner: {
+                  displayName: user.displayName,
+                  photoURL: user.photoURL,
+                },
+                createdAt: serverTimestamp(),
+              });
+              if (isScanner) {
+                socket.emit(
+                  "send files",
+                  {
+                    uuid,
+                    files: {
+                      name: file.name,
+                      type: file.type,
+                      size: file.size,
+                      url: downloadURL,
+                      parentId: folderId,
+                      sentBy: { uid: user.uid, displayName: user.displayName },
+                      sentAt: new Date(Date.now()),
+                    },
+                  },
+                  (error) => {
+                    if (error) console.error(error);
+                  }
+                );
+              }
+              resolve();
+            })
+            .catch((err) => reject(err));
+        }
+      );
+    });
   };
   return (
     <div className="upload-content">
@@ -44,16 +156,7 @@ const UploadComp = () => {
           multiple
           style={{ display: "none" }}
           onChange={(e) => {
-            const array = [];
-            Array.from(e.target.files).forEach((file) =>
-              array.push({
-                name: file.name,
-                size: file.size,
-                type: file.type.split("/") || file.type,
-              })
-            );
-            console.log(array);
-            setFiles(array);
+            setFiles(e.target.files);
           }}
         />
         <label htmlFor="select-file">
@@ -66,28 +169,36 @@ const UploadComp = () => {
           </Button>
         </label>
         {files.length > 0 && (
-          <Button variant="outlined">{`Upload (${files.length})`}</Button>
+          <Button
+            variant="outlined"
+            onClick={handleUpload}
+            disabled={uploading}>{`Upload (${files.length})`}</Button>
         )}
       </div>
       {files.length > 0 && (
-        <>
-          <Divider style={{ width: "80%", margin: "15px" }} />
-          <List
-            subheader={<ListSubheader>Files</ListSubheader>}
-            style={{ width: "80%" }}>
-            {files.map((file, index) => (
-              <ListItem key={index}>
-                <ListItemAvatar>
-                  <Avatar>{FileIcons[file.type[0]]}</Avatar>
-                </ListItemAvatar>
-                <ListItemText
-                  primary={`${file?.name}`}
-                  secondary={formatSize(file?.size)}
-                />
-              </ListItem>
-            ))}
+        <div style={{ width: "80%" }}>
+          <Divider style={{ width: "100%", margin: "15px 0px" }} />
+          {uploading && (
+            <LinearProgress variant="determinate" value={progress} />
+          )}
+          {error && <p>{error}</p>}
+          <List subheader={<ListSubheader>Files</ListSubheader>}>
+            {Array.from(files).map((file, index) => {
+              return (
+                <ListItem key={index}>
+                  <ListItemAvatar>
+                    <Avatar>{FileIcons[file.type.split("/")[0]]}</Avatar>
+                  </ListItemAvatar>
+                  <ListItemText
+                    style={{ textOverflow: "ellipsis" }}
+                    primary={`${file?.name}`}
+                    secondary={formatSize(file?.size)}
+                  />
+                </ListItem>
+              );
+            })}
           </List>
-        </>
+        </div>
       )}
     </div>
   );

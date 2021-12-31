@@ -1,3 +1,7 @@
+export const HomeURL = import.meta.env.DEV
+  ? "http://localhost:3000"
+  : "https://delta-uploader.web.app";
+
 export const browserName = () => {
   let sBrowser,
     sUsrAg = navigator.userAgent;
@@ -62,16 +66,16 @@ export const months = [
 export const formatSize = (size) => {
   let res = "";
   if (size >= 0 && size <= 1024) {
-    res = `${size} B`;
+    res = `${size.toFixed(2)} B`;
   } else if (size > 1024 && size <= 1024 * 1024) {
     size = size / 1024;
-    res = `${size} KB`;
+    res = `${size.toFixed(2)} KB`;
   } else if (size > 1024 * 1024 && size <= 1024 * 1024 * 1024) {
     size = size / (1024 * 1024);
-    res = `${size} MB`;
+    res = `${size.toFixed(2)} MB`;
   } else if (size > 1024 * 1024 * 1024 && size <= 1024 * 1024 * 1024 * 1024) {
     size = size / (1024 * 1024 * 1024);
-    res = `${size} GB`;
+    res = `${size.toFixed(2)} GB`;
   }
   return res;
 };
