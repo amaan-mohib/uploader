@@ -1,5 +1,13 @@
-import { FileUploadOutlined, Menu } from "@mui/icons-material";
-import { AppBar, Avatar, Drawer, IconButton, Toolbar } from "@mui/material";
+import { Close, FileUploadOutlined, Menu } from "@mui/icons-material";
+import {
+  AppBar,
+  Avatar,
+  Divider,
+  Drawer,
+  IconButton,
+  Toolbar,
+  Typography,
+} from "@mui/material";
 import { Box } from "@mui/system";
 import { useState } from "react";
 import { Outlet } from "react-router-dom";
@@ -29,7 +37,7 @@ const Layout = () => {
       <AppBar
         position="fixed"
         component="nav"
-        sx={{ zIndex: (theme) => theme.zIndex.drawer + 1 }}>
+        sx={{ zIndex: (theme) => theme.zIndex.drawer / 10 + 1 }}>
         <Toolbar>
           <IconButton
             color="inherit"
@@ -47,7 +55,9 @@ const Layout = () => {
               justifyContent: "start",
             }}>
             <FileUploadOutlined sx={{ mr: 1 }} fontSize="large" />
-            <h2>Uploader</h2>
+            <Typography variant="h6" fontWeight={600}>
+              Uploader
+            </Typography>
           </Box>
           {user && <AccountMenu />}
         </Toolbar>
@@ -71,16 +81,23 @@ const Layout = () => {
                 width: drawerWidth,
               },
             }}>
-            <Toolbar />
+            <Toolbar>
+              <IconButton onClick={handleDrawerToggle}>
+                <Close />
+              </IconButton>
+            </Toolbar>
+            <Divider />
             <Upload />
           </Drawer>
           <Drawer
             variant="permanent"
             sx={{
               display: { xs: "none", sm: "block" },
+              zIndex: (theme) => theme.zIndex.drawer / 10,
               flexShrink: 0,
               "& .MuiDrawer-paper": {
                 boxSizing: "border-box",
+                zIndex: (theme) => theme.zIndex.drawer / 10,
                 width: drawerWidth,
               },
             }}

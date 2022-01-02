@@ -1,10 +1,10 @@
 import {
   Add,
-  ArticleOutlined,
-  AudioFileOutlined,
+  Article,
   Image,
-  InsertDriveFileOutlined,
-  VideoFileOutlined,
+  InsertDriveFile,
+  VideoFile,
+  AudioFile,
 } from "@mui/icons-material";
 import {
   Button,
@@ -28,11 +28,11 @@ import socket from "../utils/socket";
 
 export const FileIcons = {
   image: <Image style={{ color: "red" }} />,
-  audio: <AudioFileOutlined style={{ color: "yellowgreen" }} />,
-  video: <VideoFileOutlined style={{ color: "darkorange" }} />,
-  application: <InsertDriveFileOutlined style={{ color: "darkblue" }} />,
-  text: <ArticleOutlined style={{ color: "blue" }} />,
-  "": <InsertDriveFileOutlined style={{ color: "darkblue" }} />,
+  audio: <AudioFile style={{ color: "yellowgreen" }} />,
+  video: <VideoFile style={{ color: "darkorange" }} />,
+  application: <InsertDriveFile style={{ color: "darkblue" }} />,
+  text: <Article style={{ color: "blue" }} />,
+  "": <InsertDriveFile style={{ color: "darkblue" }} />,
 };
 const UploadComp = ({ isScanner = false, uuid = "" }) => {
   const [files, setFiles] = useState([]);

@@ -2,6 +2,7 @@ import {
   Add,
   Close,
   CloudDownloadOutlined,
+  ContentCopyOutlined,
   CreateNewFolderOutlined,
   FileDownloadOutlined,
   FolderOutlined,
@@ -30,6 +31,7 @@ import {
   Toolbar,
   Typography,
   ListItemButton,
+  Button,
 } from "@mui/material";
 import axios from "axios";
 import { serverTimestamp, setDoc } from "firebase/firestore";
@@ -40,7 +42,13 @@ import short from "short-uuid";
 import { useAuth } from "../context/AuthProvider";
 import { useFolder } from "../context/FolderProvider";
 import { createDocRef } from "../utils/firebase";
-import { browserName, formatSize, months, OSName } from "../utils/format";
+import {
+  browserName,
+  formatSize,
+  HomeURL,
+  months,
+  OSName,
+} from "../utils/format";
 import socket, { ENDPOINT } from "../utils/socket";
 import NewFolder from "./NewFolder";
 import Scanner from "./Scanner";
@@ -89,7 +97,7 @@ const Upload = () => {
   };
 
   return (
-    <div style={{ paddingTop: "12px" }}>
+    <div>
       <List>
         <ListItem
           button
@@ -185,6 +193,7 @@ const QRDialog = ({
   setConnected = () => {},
 }) => {
   const { user } = useAuth();
+  const translator = short();
   useEffect(() => {
     if (socket && uuid && isQr) {
       console.log(socket.id);
@@ -231,7 +240,20 @@ const QRDialog = ({
           <div className="qr-content">
             <h2>Scan QR</h2>
             <div className="qr">
-              <Qrcode value={uuid} size={125} />
+              <Qrcode
+                value={`${HomeURL}/scan/${translator.fromUUID(uuid)}`}
+                size={125}
+              />
+              <Button
+                style={{ marginTop: "5px" }}
+                startIcon={<ContentCopyOutlined />}
+                onClick={() => {
+                  navigator.clipboard.writeText(
+                    `${HomeURL}/scan/${translator.fromUUID(uuid)}`
+                  );
+                }}>
+                Copy URL
+              </Button>
             </div>
             <RecievedFiles
               files={recievedFiles}

@@ -33,6 +33,9 @@ code {
 }
 .qr {
   padding: 20px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
 }
 .device-list {
   background-color: rgb(248, 239, 222);
@@ -63,4 +66,10 @@ code {
 .list2 > button {
   margin: 10px 5px;
   margin-top: 0;
+}
+.file-nav {
+  background-color: whitesmoke;
+}
+.file-nav > * {
+  z-index: 1010;
 }

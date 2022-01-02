@@ -34,8 +34,9 @@ import {
 } from "@mui/material";
 import { deleteDoc, onSnapshot, query, where } from "firebase/firestore";
 import { deleteObject } from "firebase/storage";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import Viewer from "react-viewer";
 import { useAuth } from "../context/AuthProvider";
 import { useFolder } from "../context/FolderProvider";
 import {
@@ -53,9 +54,12 @@ const FileExplorer = () => {
   const [folders, setFolders] = useState([]);
   const [files, setFiles] = useState([]);
   const navigate = useNavigate();
+  const [loading, setLoading] = useState(false);
+  const [visible, setVisible] = useState(false);
+  const [index, setIndex] = useState(0);
 
   useEffect(() => {
-    console.log(path);
+    setLoading(true);
     const q1 = query(
       createCollectionRef(`users/${user.uid}/folders`),
       where("parentId", "==", folderId)
@@ -71,6 +75,7 @@ const FileExplorer = () => {
     const unsub2 = onSnapshot(q2, (ss) => {
       const docs = ss.docs.map((doc) => doc.data());
       setFiles(docs);
+      setLoading(false);
     });
     return () => {
       unsub && unsub();
@@ -81,90 +86,110 @@ const FileExplorer = () => {
   const handleClickFolder = (folderId) => {
     navigate(`/folder/${folderId}`);
   };
+  const ref = useRef(null);
 
   return (
-    <div>
-      {folders.length > 0 && (
-        <div>
-          <ListSubheader>Folders</ListSubheader>
-          <div className="list2">
-            {folders.map((folder) => (
-              <Button
-                key={folder.id}
-                style={{ maxWidth: "200px" }}
-                variant="outlined"
-                startIcon={<Folder />}
-                onClick={() => {
-                  handleClickFolder(folder.id);
-                }}>
-                <div
-                  style={{
-                    overflow: "hidden",
-                    whiteSpace: "nowrap",
-                    textOverflow: "ellipsis",
+    !loading && (
+      <div ref={ref}>
+        {folders.length > 0 && (
+          <div>
+            <ListSubheader>Folders</ListSubheader>
+            <div className="list2">
+              {folders.map((folder) => (
+                <Button
+                  key={folder.id}
+                  style={{ maxWidth: "200px" }}
+                  variant="outlined"
+                  startIcon={<Folder />}
+                  onClick={() => {
+                    handleClickFolder(folder.id);
                   }}>
-                  {folder.name}
-                </div>
-              </Button>
-            ))}
+                  <div
+                    style={{
+                      overflow: "hidden",
+                      whiteSpace: "nowrap",
+                      textOverflow: "ellipsis",
+                    }}>
+                    {folder.name}
+                  </div>
+                </Button>
+              ))}
+            </div>
           </div>
-        </div>
-      )}
-      {files.length > 0 && (
-        <div>
-          <ListSubheader>Files</ListSubheader>
-          <div className="list">
-            {files.map((file) => (
-              <Paper
-                key={file.id}
-                variant="outlined"
-                style={{ height: "200px", width: "200px" }}>
-                <div className="fileIcon" style={{ height: "155px" }}>
-                  {file.type.split("/")[0] === "image" ? (
-                    <img src={file.url} alt={file.name} />
-                  ) : (
-                    FileIcons[file.type.split("/")[0]]
-                  )}
-                </div>
-                <div
-                  style={{
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "space-between",
-                    padding: "5px",
-                  }}>
+        )}
+        {files.length > 0 && (
+          <div>
+            <ListSubheader>Files</ListSubheader>
+            <div className="list">
+              {files.map((file, index) => (
+                <Paper
+                  key={file.id}
+                  variant="outlined"
+                  style={{ height: "200px", width: "200px" }}>
+                  <div className="fileIcon" style={{ height: "155px" }}>
+                    {file.type.split("/")[0] === "image" ? (
+                      <img src={file.url} alt={file.name} />
+                    ) : (
+                      FileIcons[file.type.split("/")[0]]
+                    )}
+                  </div>
                   <div
                     style={{
                       display: "flex",
                       alignItems: "center",
-                      overflow: "hidden",
+                      justifyContent: "space-between",
+                      padding: "5px",
                     }}>
-                    {FileIcons[file.type.split("/")[0]]}
-                    <Tooltip title={file.name}>
-                      <Typography
-                        sx={{
-                          ml: 1,
-                          whiteSpace: "nowrap",
-                          textOverflow: "ellipsis",
-                          overflow: "hidden",
-                        }}
-                        variant="caption">
-                        {file.name}
-                      </Typography>
-                    </Tooltip>
+                    <div
+                      style={{
+                        display: "flex",
+                        alignItems: "center",
+                        overflow: "hidden",
+                      }}>
+                      {FileIcons[file.type.split("/")[0]]}
+                      <Tooltip title={file.name}>
+                        <Typography
+                          sx={{
+                            ml: 1,
+                            whiteSpace: "nowrap",
+                            textOverflow: "ellipsis",
+                            overflow: "hidden",
+                          }}
+                          variant="caption">
+                          {file.name}
+                        </Typography>
+                      </Tooltip>
+                    </div>
+                    <ContextMenu
+                      file={file}
+                      setVisible={setVisible}
+                      setIndex={setIndex}
+                      index={index}
+                    />
                   </div>
-                  <ContextMenu file={file} />
-                </div>
-              </Paper>
-            ))}
+                </Paper>
+              ))}
+            </div>
           </div>
-        </div>
-      )}
-    </div>
+        )}
+        <Viewer
+          visible={visible}
+          images={files.map((file) => ({
+            src: file.type.split("/")[0] !== "image" ? "" : file.url,
+            alt: file.name,
+            downloadUrl: file.type.split("/")[0] !== "image" ? "" : file.url,
+          }))}
+          downloadable
+          downloadInNewWindow
+          activeIndex={index}
+          onClose={() => setVisible(false)}
+        />
+      </div>
+    )
   );
 };
 
-const ContextMenu = ({ file }) => {
+const ContextMenu = ({ file, setVisible, setIndex, index }) => {
   const { user } = useAuth();
   const { path } = useFolder();
   const [anchorEl, setAnchorEl] = useState(null);
@@ -189,7 +214,7 @@ const ContextMenu = ({ file }) => {
   const share = () => {
     if (navigator.share) {
       navigator.share({
-        url: `${HomeURL}/file/${file.id}`,
+        url: `${HomeURL}/file/${user.uid}/${file.id}`,
         text: file.name,
         title: "Share File",
       });
@@ -224,7 +249,16 @@ const ContextMenu = ({ file }) => {
           "aria-labelledby": `basic-button-${file.id}`,
         }}>
         <MenuList dense>
-          <MenuItem>
+          <MenuItem
+            onClick={() => {
+              if (file.type.split("/")[0] === "image") {
+                setVisible(true);
+                setIndex(index);
+                handleMenuClose();
+              }
+            }}
+            component={Link}
+            to={file.type.split("/")[0] === "image" ? "" : `/file/${file.id}`}>
             <ListItemIcon>
               <VisibilityOutlined fontSize="small" />
             </ListItemIcon>
@@ -241,7 +275,9 @@ const ContextMenu = ({ file }) => {
           ) : (
             <MenuItem
               onClick={() => {
-                navigator.clipboard.writeText(`${HomeURL}/file/${file.id}`);
+                navigator.clipboard.writeText(
+                  `${HomeURL}/file/${user.uid}/${file.id}`
+                );
                 handleMenuClose();
               }}>
               <ListItemIcon>
@@ -301,6 +337,7 @@ const ContextMenu = ({ file }) => {
   );
 };
 export const Details = ({ onClose, open, file }) => {
+  const { user } = useAuth();
   return (
     <Dialog onClose={onClose} open={open}>
       <DialogTitle>
@@ -355,23 +392,25 @@ export const Details = ({ onClose, open, file }) => {
               secondary={`${file.owner.displayName}`}
             />
           </ListItem>
-          <ListItem
-            component={Link}
-            to={
-              file.path[file.path.length - 1].id.split("/").pop()
-                ? `/folder/${file.path[file.path.length - 1].id
-                    .split("/")
-                    .pop()}`
-                : "/"
-            }>
-            <ListItemIcon>
-              <FolderOutlined />
-            </ListItemIcon>
-            <ListItemText
-              primary="Location"
-              secondary={`${file.path[file.path.length - 1].name}`}
-            />
-          </ListItem>
+          {user && file.owner.photoURL === user.photoURL && (
+            <ListItem
+              component={Link}
+              to={
+                file.path[file.path.length - 1].id.split("/").pop()
+                  ? `/folder/${file.path[file.path.length - 1].id
+                      .split("/")
+                      .pop()}`
+                  : "/"
+              }>
+              <ListItemIcon>
+                <FolderOutlined />
+              </ListItemIcon>
+              <ListItemText
+                primary="Location"
+                secondary={`${file.path[file.path.length - 1].name}`}
+              />
+            </ListItem>
+          )}
         </List>
       </DialogContent>
     </Dialog>

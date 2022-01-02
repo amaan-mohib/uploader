@@ -24,7 +24,7 @@ import NewFolder from "./NewFolder";
 
 const Home = () => {
   const { path } = useFolder();
-  //   const { user } = useAuth();
+  const { user } = useAuth();
   const [folder, setFolder] = useState(false);
   const [anchorEl, setAnchorEl] = useState(null);
   const open = Boolean(anchorEl);
@@ -89,11 +89,9 @@ const Home = () => {
                     <MenuItem
                       onClick={() => {
                         navigator.share({
-                          url: currentPath.id.split("/").pop()
-                            ? `${HomeURL}/folder/${currentPath.id
-                                .split("/")
-                                .pop()}`
-                            : `${HomeURL}/`,
+                          url: `${HomeURL}/folder/${user.uid}/${currentPath.id
+                            .split("/")
+                            .pop()}`,
                           text: currentPath.name,
                           title: "Share Folder",
                         });
@@ -108,11 +106,9 @@ const Home = () => {
                     <MenuItem
                       onClick={() => {
                         navigator.clipboard.writeText(
-                          currentPath.id.split("/").pop()
-                            ? `${HomeURL}/folder/${currentPath.id
-                                .split("/")
-                                .pop()}`
-                            : `${HomeURL}/`
+                          `${HomeURL}/folder/${user.uid}/${currentPath.id
+                            .split("/")
+                            .pop()}`
                         );
                         handleMenuClose();
                       }}>
