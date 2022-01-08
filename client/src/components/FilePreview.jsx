@@ -1,8 +1,8 @@
-import { getDoc } from "firebase/firestore";
+import { getDoc, serverTimestamp, setDoc } from "firebase/firestore";
 import { useEffect, useState } from "react";
-import { Link, useParams } from "react-router-dom";
+import { Link, useNavigate, useParams } from "react-router-dom";
 import { useAuth } from "../context/AuthProvider";
-import { createOnlyDocRef } from "../utils/firebase";
+import { createDocRef, createOnlyDocRef } from "../utils/firebase";
 import Viewer from "react-viewer";
 import FileViewer from "react-file-viewer";
 import { FileIcons } from "./UploadComp";
@@ -14,7 +14,9 @@ import {
 } from "@mui/material";
 import {
   ArrowBack,
+  CloudDownloadOutlined,
   FileDownloadOutlined,
+  FolderOutlined,
   InfoOutlined,
 } from "@mui/icons-material";
 import { Details } from "./FileExplorer";
@@ -24,6 +26,7 @@ const FilePreview = () => {
   const { user } = useAuth();
   const [file, setFile] = useState(null);
   const [open, setOpen] = useState(false);
+  const navigate = useNavigate();
   useEffect(async () => {
     const docRef = createOnlyDocRef(
       `users/${uid || user?.uid}/files/${fileId}`
@@ -31,8 +34,27 @@ const FilePreview = () => {
     const docSnap = await getDoc(docRef);
     if (docSnap.exists()) {
       setFile(docSnap.data());
+    } else {
+      navigate("/error");
     }
   }, []);
+  const save = async () => {
+    const fileRef = createDocRef(`users/${user.uid}/files`);
+    await setDoc(fileRef, {
+      id: fileRef.id,
+      name: file.name,
+      type: file.type,
+      size: file.size,
+      url: file.url,
+      parentId: "shared",
+      path: [
+        { id: "/", name: "Home" },
+        { id: "//shared", name: "Shared" },
+      ],
+      owner: file.owner,
+      createdAt: serverTimestamp(),
+    });
+  };
   return (
     <div>
       <nav
@@ -86,8 +108,28 @@ const FilePreview = () => {
               <FileDownloadOutlined />
             </IconButton>
           </Tooltip>
-          <Tooltip title="Details" onClick={() => setOpen(true)}>
-            <IconButton>
+          {user &&
+            (file?.owner.photoURL === user.photoURL ? (
+              <Tooltip title="Open file location">
+                <IconButton
+                  component={Link}
+                  to={
+                    file.parentId === user.uid
+                      ? "/"
+                      : `/folder/${file.parentId}`
+                  }>
+                  <FolderOutlined />
+                </IconButton>
+              </Tooltip>
+            ) : (
+              <Tooltip title="Save to Shared">
+                <IconButton onClick={save}>
+                  <CloudDownloadOutlined />
+                </IconButton>
+              </Tooltip>
+            ))}
+          <Tooltip title="Details">
+            <IconButton onClick={() => setOpen(true)}>
               <InfoOutlined />
             </IconButton>
           </Tooltip>

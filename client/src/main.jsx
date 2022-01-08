@@ -9,6 +9,8 @@ import Login from "./components/Login";
 import PrivateRoute from "./components/PrivateRoute";
 import Scanner from "./components/Scanner";
 import FilePreview from "./components/FilePreview";
+import FolderPreview from "./components/FolderPreview";
+import NotFound from "./components/NotFound";
 
 ReactDOM.render(
   <React.StrictMode>
@@ -34,6 +36,8 @@ ReactDOM.render(
                 </PrivateRoute>
               }
             />
+            <Route path="/folder/:uid/:fid" element={<FolderPreview />} />
+            <Route path="/error" element={<NotFound />} />
           </Route>
           <Route
             path="/scan/:scanId"
@@ -45,6 +49,7 @@ ReactDOM.render(
           />
           <Route path="/file/:fileId" element={<FilePreview />} />
           <Route path="/file/:uid/:fileId" element={<FilePreview />} />
+          <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>
     </AuthProvider>

@@ -1,7 +1,6 @@
 import { Close, FileUploadOutlined, Menu } from "@mui/icons-material";
 import {
   AppBar,
-  Avatar,
   Divider,
   Drawer,
   IconButton,
@@ -10,19 +9,14 @@ import {
 } from "@mui/material";
 import { Box } from "@mui/system";
 import { useState } from "react";
-import { Outlet } from "react-router-dom";
+import { Outlet, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthProvider";
 import Upload from "./Upload";
 import AccountMenu from "./AccountMenu";
 
 const Layout = () => {
   const { user, loading } = useAuth();
-  // const router = useRouter();
-  // useEffect(() => {
-  //   if (!loading && !user) {
-  //     router.push("/login");
-  //   }
-  // }, [user, loading]);
+  const navigate = useNavigate();
   const [mobileOpen, setMobileOpen] = useState(false);
 
   const handleDrawerToggle = () => {
@@ -47,18 +41,24 @@ const Layout = () => {
             sx={{ mr: 2, display: { sm: "none" } }}>
             <Menu />
           </IconButton>
-          <Box
-            sx={{
-              flexGrow: 1,
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "start",
-            }}>
-            <FileUploadOutlined sx={{ mr: 1 }} fontSize="large" />
-            <Typography variant="h6" fontWeight={600}>
-              Uploader
-            </Typography>
-          </Box>
+          <div style={{ flexGrow: 1 }}>
+            <Box
+              onClick={() => {
+                navigate("/");
+              }}
+              sx={{
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "start",
+                ":hover": { cursor: "pointer" },
+                width: "max-content",
+              }}>
+              <FileUploadOutlined fontSize="large" sx={{ mr: 1 }} />
+              <Typography variant="h6" fontWeight={600}>
+                Uploader
+              </Typography>
+            </Box>
+          </div>
           {user && <AccountMenu />}
         </Toolbar>
       </AppBar>

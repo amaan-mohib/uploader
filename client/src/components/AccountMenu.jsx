@@ -31,6 +31,7 @@ const AccountMenu = () => {
         </IconButton>
       </Tooltip>
       <Menu
+        dense
         anchorEl={anchorEl}
         open={open}
         onClose={handleClose}
@@ -62,22 +63,12 @@ const AccountMenu = () => {
         }}
         transformOrigin={{ horizontal: "right", vertical: "top" }}
         anchorOrigin={{ horizontal: "right", vertical: "bottom" }}>
-        <MenuItem>
-          <Avatar /> Profile
-        </MenuItem>
-        <Divider />
         <MenuItem component={Link} to="/login">
           <ListItemIcon>
             <PersonAdd fontSize="small" />
           </ListItemIcon>
           Add another account
         </MenuItem>
-        {/* <MenuItem>
-          <ListItemIcon>
-            <Settings fontSize="small" />
-          </ListItemIcon>
-          Settings
-        </MenuItem> */}
         <MenuItem onClick={logout}>
           <ListItemIcon>
             <Logout fontSize="small" />

@@ -125,7 +125,11 @@ const UploadComp = ({ isScanner = false, uuid = "" }) => {
                       size: file.size,
                       url: downloadURL,
                       parentId: folderId,
-                      sentBy: { uid: user.uid, displayName: user.displayName },
+                      sentBy: {
+                        uid: user.uid,
+                        displayName: user.displayName,
+                        photoURL: user.photoURL,
+                      },
                       sentAt: new Date(Date.now()),
                     },
                   },

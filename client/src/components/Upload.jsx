@@ -245,7 +245,7 @@ const QRDialog = ({
                 size={125}
               />
               <Button
-                style={{ marginTop: "5px" }}
+                sx={{ mt: 1 }}
                 startIcon={<ContentCopyOutlined />}
                 onClick={() => {
                   navigator.clipboard.writeText(
@@ -378,8 +378,8 @@ const ContextMenu = ({ file, index, handleCloseD }) => {
         { id: "//shared", name: "Shared" },
       ],
       owner: {
-        displayName: user.displayName,
-        photoURL: user.photoURL,
+        displayName: file.sentBy.displayName,
+        photoURL: file.sentBy.photoURL,
       },
       createdAt: serverTimestamp(),
     });

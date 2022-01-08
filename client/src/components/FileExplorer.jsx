@@ -9,6 +9,7 @@ import {
   VisibilityOutlined,
   CloseOutlined,
   FolderOutlined,
+  CloudDownloadOutlined,
   ContentCopyOutlined,
 } from "@mui/icons-material";
 import {
@@ -32,15 +33,23 @@ import {
   ListItem,
   Avatar,
 } from "@mui/material";
-import { deleteDoc, onSnapshot, query, where } from "firebase/firestore";
+import {
+  deleteDoc,
+  onSnapshot,
+  query,
+  serverTimestamp,
+  setDoc,
+  where,
+} from "firebase/firestore";
 import { deleteObject } from "firebase/storage";
 import { useEffect, useRef, useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useParams } from "react-router-dom";
 import Viewer from "react-viewer";
 import { useAuth } from "../context/AuthProvider";
 import { useFolder } from "../context/FolderProvider";
 import {
   createCollectionRef,
+  createDocRef,
   createOnlyDocRef,
   createStorageRef,
 } from "../utils/firebase";
@@ -49,7 +58,8 @@ import { Rename } from "./NewFolder";
 import { FileIcons } from "./UploadComp";
 
 const FileExplorer = () => {
-  const { folderId, setFolderId, setPath, path } = useFolder();
+  const { folderId } = useFolder();
+  const { uid, fid } = useParams();
   const { user } = useAuth();
   const [folders, setFolders] = useState([]);
   const [files, setFiles] = useState([]);
@@ -61,12 +71,12 @@ const FileExplorer = () => {
   useEffect(() => {
     setLoading(true);
     const q1 = query(
-      createCollectionRef(`users/${user.uid}/folders`),
-      where("parentId", "==", folderId)
+      createCollectionRef(`users/${uid || user?.uid}/folders`),
+      where("parentId", "==", fid ? fid : folderId)
     );
     const q2 = query(
-      createCollectionRef(`users/${user.uid}/files`),
-      where("parentId", "==", folderId)
+      createCollectionRef(`users/${uid || user?.uid}/files`),
+      where("parentId", "==", fid ? fid : folderId)
     );
     const unsub = onSnapshot(q1, (ss) => {
       const docs = ss.docs.map((doc) => doc.data());
@@ -81,10 +91,10 @@ const FileExplorer = () => {
       unsub && unsub();
       unsub2 && unsub2();
     };
-  }, [folderId]);
+  }, [folderId, fid, uid]);
 
   const handleClickFolder = (folderId) => {
-    navigate(`/folder/${folderId}`);
+    navigate(`/folder${uid ? `/${uid}` : ""}/${folderId}`);
   };
   const ref = useRef(null);
 
@@ -160,12 +170,21 @@ const FileExplorer = () => {
                         </Typography>
                       </Tooltip>
                     </div>
-                    <ContextMenu
-                      file={file}
-                      setVisible={setVisible}
-                      setIndex={setIndex}
-                      index={index}
-                    />
+                    {uid ? (
+                      <ContextMenuPreview
+                        file={file}
+                        setVisible={setVisible}
+                        setIndex={setIndex}
+                        index={index}
+                      />
+                    ) : (
+                      <ContextMenu
+                        file={file}
+                        setVisible={setVisible}
+                        setIndex={setIndex}
+                        index={index}
+                      />
+                    )}
                   </div>
                 </Paper>
               ))}
@@ -336,6 +355,164 @@ const ContextMenu = ({ file, setVisible, setIndex, index }) => {
     </>
   );
 };
+
+const ContextMenuPreview = ({ file, setVisible, setIndex, index }) => {
+  const { user } = useAuth();
+  const { uid } = useParams();
+  const [anchorEl, setAnchorEl] = useState(null);
+  const open = Boolean(anchorEl);
+  const [openD, setOpenD] = useState(false);
+  const handleClickOpen = () => {
+    setOpenD(true);
+  };
+  const handleClose = () => {
+    setOpenD(false);
+  };
+  const handleMenu = (event) => {
+    setAnchorEl(event.currentTarget);
+  };
+  const handleMenuClose = () => {
+    setAnchorEl(null);
+  };
+  const share = () => {
+    if (navigator.share) {
+      navigator.share({
+        url: `${HomeURL}/file/${uid || user?.uid}/${file.id}`,
+        text: file.name,
+        title: "Share File",
+      });
+    }
+  };
+  const save = async () => {
+    const fileRef = createDocRef(`users/${user.uid}/files`);
+    await setDoc(fileRef, {
+      id: fileRef.id,
+      name: file.name,
+      type: file.type,
+      size: file.size,
+      url: file.url,
+      parentId: "shared",
+      path: [
+        { id: "/", name: "Home" },
+        { id: "//shared", name: "Shared" },
+      ],
+      owner: file.owner,
+      createdAt: serverTimestamp(),
+    });
+    handleMenuClose();
+  };
+  return (
+    <>
+      <IconButton
+        id={`basic-button-${file.id}`}
+        aria-controls="basic-menu"
+        aria-haspopup="true"
+        aria-expanded={open ? "true" : undefined}
+        onClick={handleMenu}>
+        <MoreVertOutlined fontSize="small" />
+      </IconButton>
+      <Menu
+        anchorEl={anchorEl}
+        open={open}
+        onClose={handleMenuClose}
+        MenuListProps={{
+          "aria-labelledby": `basic-button-${file.id}`,
+        }}>
+        <MenuList dense>
+          <MenuItem
+            onClick={() => {
+              if (file.type.split("/")[0] === "image") {
+                setVisible(true);
+                setIndex(index);
+                handleMenuClose();
+              }
+            }}
+            component={Link}
+            to={
+              file.type.split("/")[0] === "image"
+                ? ""
+                : `/file${uid ? `/${uid}` : ""}/${file.id}`
+            }>
+            <ListItemIcon>
+              <VisibilityOutlined fontSize="small" />
+            </ListItemIcon>
+            <ListItemText>Preview</ListItemText>
+          </MenuItem>
+          <Divider />
+          {navigator.canShare ? (
+            <MenuItem onClick={share}>
+              <ListItemIcon>
+                <ShareOutlined fontSize="small" />
+              </ListItemIcon>
+              <ListItemText>Share</ListItemText>
+            </MenuItem>
+          ) : (
+            <MenuItem
+              onClick={() => {
+                navigator.clipboard.writeText(
+                  `${HomeURL}/file/${uid || user?.uid}/${file.id}`
+                );
+                handleMenuClose();
+              }}>
+              <ListItemIcon>
+                <ContentCopyOutlined fontSize="small" />
+              </ListItemIcon>
+              <ListItemText>Copy Link</ListItemText>
+            </MenuItem>
+          )}
+          <Divider />
+          <MenuItem
+            onClick={() => {
+              handleClickOpen();
+              handleMenuClose();
+            }}>
+            <ListItemIcon>
+              <InfoOutlined fontSize="small" />
+            </ListItemIcon>
+            <ListItemText>View Details</ListItemText>
+          </MenuItem>
+
+          {user &&
+            (file.owner.photoURL === user.photoURL ? (
+              <MenuItem
+                component={Link}
+                to={
+                  file.parentId === user.uid ? "/" : `/folder/${file.parentId}`
+                }>
+                <ListItemIcon>
+                  <FolderOutlined fontSize="small" />
+                </ListItemIcon>
+                <ListItemText>Open file location</ListItemText>
+              </MenuItem>
+            ) : (
+              <MenuItem onClick={save}>
+                <ListItemIcon>
+                  <CloudDownloadOutlined fontSize="small" />
+                </ListItemIcon>
+                <ListItemText>Save to Shared</ListItemText>
+              </MenuItem>
+            ))}
+          <MenuItem
+            component={MuiLink}
+            href={file.url}
+            download={file.name}
+            target="_blank"
+            rel="noopener noreferrer"
+            onClick={() => {
+              handleMenuClose();
+            }}>
+            <ListItemIcon>
+              <FileDownloadOutlined fontSize="small" />
+            </ListItemIcon>
+            <ListItemText>Download</ListItemText>
+          </MenuItem>
+        </MenuList>
+      </Menu>
+      <Details onClose={handleClose} open={openD} file={file} />
+    </>
+  );
+};
+
 export const Details = ({ onClose, open, file }) => {
   const { user } = useAuth();
   return (

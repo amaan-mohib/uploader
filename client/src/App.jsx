@@ -2,7 +2,7 @@
 import logo from "./logo.svg";
 import "./App.css";
 import Home from "./components/Home";
-import { useParams } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import { useEffect } from "react";
 import { useFolder } from "./context/FolderProvider";
 import { useAuth } from "./context/AuthProvider";
@@ -14,6 +14,7 @@ function App() {
   const { id } = useParams();
   const { setFolderId, setPath } = useFolder();
   const { user } = useAuth();
+  const navigate = useNavigate();
   useEffect(async () => {
     if (id) {
       if (id === "shared") {
@@ -29,6 +30,8 @@ function App() {
         if (docSnap.exists()) {
           const data = docSnap.data();
           setPath(data.path);
+        } else {
+          navigate("/error");
         }
       }
     } else {

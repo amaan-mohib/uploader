@@ -85,39 +85,40 @@ const Home = () => {
                     </ListItemIcon>
                     <ListItemText>New Folder</ListItemText>
                   </MenuItem>
-                  {navigator.share ? (
-                    <MenuItem
-                      onClick={() => {
-                        navigator.share({
-                          url: `${HomeURL}/folder/${user.uid}/${currentPath.id
-                            .split("/")
-                            .pop()}`,
-                          text: currentPath.name,
-                          title: "Share Folder",
-                        });
-                        handleMenuClose();
-                      }}>
-                      <ListItemIcon>
-                        <ShareOutlined fontSize="small" />
-                      </ListItemIcon>
-                      <ListItemText>Share</ListItemText>
-                    </MenuItem>
-                  ) : (
-                    <MenuItem
-                      onClick={() => {
-                        navigator.clipboard.writeText(
-                          `${HomeURL}/folder/${user.uid}/${currentPath.id
-                            .split("/")
-                            .pop()}`
-                        );
-                        handleMenuClose();
-                      }}>
-                      <ListItemIcon>
-                        <ContentCopyOutlined fontSize="small" />
-                      </ListItemIcon>
-                      <ListItemText>Copy Link</ListItemText>
-                    </MenuItem>
-                  )}
+                  {currentPath.name !== "Home" &&
+                    (navigator.share ? (
+                      <MenuItem
+                        onClick={() => {
+                          navigator.share({
+                            url: `${HomeURL}/folder/${user.uid}/${currentPath.id
+                              .split("/")
+                              .pop()}`,
+                            text: currentPath.name,
+                            title: "Share Folder",
+                          });
+                          handleMenuClose();
+                        }}>
+                        <ListItemIcon>
+                          <ShareOutlined fontSize="small" />
+                        </ListItemIcon>
+                        <ListItemText>Share</ListItemText>
+                      </MenuItem>
+                    ) : (
+                      <MenuItem
+                        onClick={() => {
+                          navigator.clipboard.writeText(
+                            `${HomeURL}/folder/${user.uid}/${currentPath.id
+                              .split("/")
+                              .pop()}`
+                          );
+                          handleMenuClose();
+                        }}>
+                        <ListItemIcon>
+                          <ContentCopyOutlined fontSize="small" />
+                        </ListItemIcon>
+                        <ListItemText>Copy Link</ListItemText>
+                      </MenuItem>
+                    ))}
                 </MenuList>
               </Menu>
               <NewFolder open={folder} handleClose={() => setFolder(false)} />
