@@ -150,7 +150,12 @@ const FilePreview = () => {
             showTotal={false}
           />
         ) : (
-          <div style={{ width: "100%", height: `calc(100vh - 50px)` }}>
+          <div
+            style={{
+              width: "100%",
+              height: `calc(100vh - 50px)`,
+              fontFamily: "unset !important",
+            }}>
             <FileViewer
               fileType={file.name.split(".").pop()}
               filePath={file.url}

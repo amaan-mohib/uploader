@@ -1,5 +1,3 @@
-// import { useState } from "react";
-import logo from "./logo.svg";
 import "./App.css";
 import Home from "./components/Home";
 import { useNavigate, useParams } from "react-router-dom";
@@ -8,7 +6,6 @@ import { useFolder } from "./context/FolderProvider";
 import { useAuth } from "./context/AuthProvider";
 import { createOnlyDocRef } from "./utils/firebase";
 import { getDoc } from "firebase/firestore";
-// import { Route } from "react-router-dom";
 
 function App() {
   const { id } = useParams();

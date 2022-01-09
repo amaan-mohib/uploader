@@ -1,5 +1,7 @@
 import io from "socket.io-client";
-export const ENDPOINT = "http://localhost:5000/";
+export const ENDPOINT = import.meta.env.DEV
+  ? "http://localhost:5000/"
+  : "https://delta-uploader-api.herokuapp.com/";
 
 const socket = io(ENDPOINT, {
   transports: ["websocket", "polling", "flashsocket"],
