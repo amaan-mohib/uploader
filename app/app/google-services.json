@@ -1,0 +1,47 @@
+{
+  "project_info": {
+    "project_number": "237731248790",
+    "project_id": "delta-uploader",
+    "storage_bucket": "delta-uploader.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:237731248790:android:adec17bc8f3ed83773a0b7",
+        "android_client_info": {
+          "package_name": "com.example.uploader"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "237731248790-v4a8cc85c02cjq4nlpekdalvh1vhkda6.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.uploader",
+            "certificate_hash": "4f43425b9c2acd5110592c6a00d20575a637714c"
+          }
+        },
+        {
+          "client_id": "237731248790-fjp423lqiigvg5g9o4p9hauc2gur7qkc.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyA51WjiB62-9rEIEuunlw4wqAaGK6BB_Vo"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "237731248790-fjp423lqiigvg5g9o4p9hauc2gur7qkc.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

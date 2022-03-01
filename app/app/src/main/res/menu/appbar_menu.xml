@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:tools="http://schemas.android.com/tools"
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+<!--    <group-->
+<!--        android:id="@+id/more"-->
+<!--        android:title="@string/more"-->
+<!--        android:contentDescription="Show More"-->
+<!--        app:showAsAction="never"-->
+<!--        tools:ignore="HardcodedText" >-->
+        <item
+            android:id="@+id/new_folder_menu"
+            android:title="New Folder"
+            android:contentDescription="New Folder"
+            app:showAsAction="ifRoom"
+            android:icon="@drawable/ic_outline_create_new_folder_24"
+        tools:ignore="HardcodedText" />
+        <item
+            android:id="@+id/share_menu"
+            android:title="Share"
+            android:contentDescription="Share"
+            app:showAsAction="ifRoom"
+            android:icon="@drawable/ic_baseline_share_24"
+            tools:ignore="HardcodedText" />
+<!--    </group>-->
+
+</menu>

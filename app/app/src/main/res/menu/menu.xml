@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <item
+        android:id="@+id/files"
+        android:icon="@drawable/ic_baseline_folder_24"
+        android:title="@string/files" />
+    <item
+        android:id="@+id/shared"
+        android:icon="@drawable/ic_baseline_folder_shared_24"
+        android:title="@string/shared" />
+    <item
+        android:id="@+id/profile"
+        android:icon="@drawable/ic_baseline_person_24"
+        android:title="@string/profile" />
+</menu>
