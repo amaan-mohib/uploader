@@ -2,6 +2,7 @@ const express = require("express");
 const cors = require("cors");
 const http = require("http");
 const socketio = require("socket.io");
+const short = require("short-uuid");
 
 const app = express();
 const server = http.createServer(app);
@@ -78,6 +79,17 @@ app.get("/host/:uuid", (req, res) => {
     if (user.host === true) host = user.sid;
   });
   res.send(host);
+});
+
+app.get("/short/:uuid", (req, res) => {
+  const uuid = req.params.uuid;
+  const translator = short();
+  try {
+    const shortUUID = translator.fromUUID(uuid);
+    res.send(shortUUID);
+  } catch (error) {
+    console.error(error);
+  }
 });
 
 server.listen(process.env.PORT || 5000, () =>
