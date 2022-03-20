@@ -16,6 +16,7 @@ data class Folder(
   var createdAt: Date? = null
 )
 
+//Made parcelable to pass the path as argument (as a bundle) to upload fragment
 @Parcelize
 data class Path(
   var id: String? = null,

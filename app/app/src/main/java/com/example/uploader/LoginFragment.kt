@@ -56,7 +56,7 @@ class LoginFragment : Fragment() {
       navController.popBackStack(R.id.mainFragment, false)
     }
 
-    viewModel.authenticationState.observe(viewLifecycleOwner, { authenticationState ->
+    viewModel.authenticationState.observe(viewLifecycleOwner) { authenticationState ->
       when (authenticationState) {
 //        LoginViewModel.AuthenticationState.AUTHENTICATED -> navController.popBackStack()
         LoginViewModel.AuthenticationState.INVALID_AUTHENTICATION -> Snackbar.make(
@@ -67,7 +67,7 @@ class LoginFragment : Fragment() {
           "Authentication state that doesn't require any UI change $authenticationState"
         )
       }
-    })
+    }
   }
 
   private val signInLauncher = registerForActivityResult(

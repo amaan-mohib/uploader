@@ -118,7 +118,7 @@ class MainFragment : Fragment() {
       }
     }
 
-    folderModel.parentId.observe(viewLifecycleOwner, { parentId ->
+    folderModel.parentId.observe(viewLifecycleOwner) { parentId ->
 
       eventChangeListener(parentId)
 
@@ -130,7 +130,7 @@ class MainFragment : Fragment() {
         toolbar.menu.findItem(R.id.share_menu).isVisible = true
       }
 
-    })
+    }
 
   }
 

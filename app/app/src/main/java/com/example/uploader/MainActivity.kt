@@ -46,14 +46,17 @@ class MainActivity : AppCompatActivity() {
   }
 
   private fun observeAuthState() {
-    viewModel.authenticationState.observe(this, { authenticationState ->
-      when(authenticationState){
-        LoginViewModel.AuthenticationState.UNAUTHENTICATED ->{
+    viewModel.authenticationState.observe(this) { authenticationState ->
+      when (authenticationState) {
+        LoginViewModel.AuthenticationState.UNAUTHENTICATED -> {
           navController.navigate(R.id.loginFragment)
         }
-        else -> Log.e("MainFragment","Authentication state that doesn't require any UI change $authenticationState")
+        else -> Log.e(
+          "MainFragment",
+          "Authentication state that doesn't require any UI change $authenticationState"
+        )
       }
-    })
+    }
   }
 //  override fun onSupportNavigateUp(): Boolean {
 //    return navController.navigateUp()
