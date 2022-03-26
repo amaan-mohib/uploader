@@ -38,7 +38,6 @@ import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.ListenerRegistration
 import com.journeyapps.barcodescanner.ScanContract
 import com.journeyapps.barcodescanner.ScanOptions
-import io.socket.client.Socket
 import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
@@ -69,8 +68,7 @@ class MainFragment : Fragment() {
 
   private lateinit var folderModel: FolderIdViewModel
   private lateinit var folderIdViewModelFactory: FolderIdViewModelFactory
-  private val UUIDViewModel by viewModels<UUIDViewModel>()
-  private lateinit var socket: Socket
+  private val uuidViewModel by viewModels<UUIDViewModel>()
 
 //  override fun onCreate(savedInstanceState: Bundle?) {
 //    super.onCreate(savedInstanceState)
@@ -309,7 +307,7 @@ class MainFragment : Fragment() {
       mainConstraintLayout.visibility = View.GONE
       mainSpinner.visibility = View.VISIBLE
       getUUID(shortUuid)
-      UUIDViewModel.uuid.observe(viewLifecycleOwner) { uuid ->
+      uuidViewModel.uuid.observe(viewLifecycleOwner) { uuid ->
         if (uuid.isNotEmpty() && uuid != "Failed") {
           val bundle = bundleOf(
             "currentFolderId" to currentFolder.id,
@@ -343,7 +341,7 @@ class MainFragment : Fragment() {
       }
 
       override fun onFailure(call: Call<String>, t: Throwable) {
-        UUIDViewModel.uuid.value = "Failed"
+        uuidViewModel.uuid.value = "Failed"
         Log.e(TAG, "failed")
       }
     })
@@ -357,13 +355,13 @@ class MainFragment : Fragment() {
         if (response.code() == 200 && res != null) {
           Log.i(TAG, "is users: $res")
           if (res)
-            UUIDViewModel.uuid.value = uuid
-          else UUIDViewModel.uuid.value = "Failed"
+            uuidViewModel.uuid.value = uuid
+          else uuidViewModel.uuid.value = "Failed"
         }
       }
 
       override fun onFailure(call: Call<Boolean>, t: Throwable) {
-        UUIDViewModel.uuid.value = "Failed"
+        uuidViewModel.uuid.value = "Failed"
         Log.e(TAG, "failed")
       }
     })
