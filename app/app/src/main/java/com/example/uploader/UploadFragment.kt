@@ -155,7 +155,18 @@ class UploadFragment : Fragment() {
     clearButton.visibility = View.GONE
     progressBar.visibility = View.VISIBLE
     for (file in fileArrayList) {
-      uploadImage(file.name, file.type, file.size, file.url?.toUri(), fileArrayList.indexOf(file))
+      if (file.size!! < 10485760) {
+        uploadImage(file.name, file.type, file.size, file.url?.toUri(), fileArrayList.indexOf(file))
+      } else {
+        Snackbar.make(
+          this.requireView(),
+          "Did not upload ${file.name} because its too large (>10 MB)",
+          Snackbar.LENGTH_LONG
+        ).show()
+        if (fileArrayList.indexOf(file) == fileArrayList.size - 1) {
+          reset()
+        }
+      }
     }
   }
 
