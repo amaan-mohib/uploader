@@ -129,7 +129,7 @@ class QRFragment : Fragment() {
               owner = Owner(displayName = displayName)
             )
           )
-          fileArrayList.distinctBy { it.name }
+          fileArrayList.distinctBy { it.url }
 
           if (fileArrayList.isNotEmpty()){
             receivedFiles.visibility=View.VISIBLE

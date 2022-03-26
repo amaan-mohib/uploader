@@ -22,8 +22,12 @@ io.on("connect", (socket) => {
     users[uuid] = users[uuid] || [];
     users[uuid].push(user);
     console.log(`[${uuid}]: `, users[uuid]);
+
+    const connected = users[uuid].filter(
+      (v, i, a) => a.findIndex((v2) => v2.sid === v.sid) === i
+    );
     io.to(uuid).emit("connected users", {
-      connected: users[uuid],
+      connected: connected,
     });
     callback();
   });
@@ -44,7 +48,9 @@ io.on("connect", (socket) => {
         if (users[uuid]) {
           let newUser = users[uuid].filter((user) => user.sid !== socket.id);
           console.log(uuid, "newUser: ", newUser);
-          users[uuid] = newUser;
+          users[uuid] = newUser.filter(
+            (v, i, a) => a.findIndex((v2) => v2.sid === v.sid) === i
+          );
           io.to(uuid).emit("connected users", {
             connected: users[uuid],
           });
@@ -89,6 +95,19 @@ app.get("/short/:uuid", (req, res) => {
     res.send(shortUUID);
   } catch (error) {
     console.error(error);
+    res.sendStatus(500);
+  }
+});
+
+app.get("/uuid/:sid", (req, res) => {
+  const sid = req.params.sid;
+  const translator = short();
+  try {
+    const UUID = translator.toUUID(sid);
+    res.send(UUID);
+  } catch (error) {
+    console.error(error);
+    res.sendStatus(500);
   }
 });
 

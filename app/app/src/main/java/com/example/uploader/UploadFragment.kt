@@ -39,6 +39,7 @@ class UploadFragment : Fragment() {
   private lateinit var binding: FragmentUploadBinding
   private lateinit var currentFolderId: String
   private lateinit var currentFolderPath: ArrayList<Path>
+  private lateinit var scanUUID: String
   private val currentUser: FirebaseUser? = FirebaseAuth.getInstance().currentUser
   private val storage = Firebase.storage
   private lateinit var storageReference: StorageReference
@@ -74,9 +75,9 @@ class UploadFragment : Fragment() {
     currentFolderId = (id ?: currentUser?.uid) as String
     currentFolderPath =
       arguments?.getParcelableArrayList<Path>("currentFolderPath") as ArrayList<Path>
+    scanUUID = arguments?.getString("uuid")?:""
 
-
-    Log.i(TAG, "folder: $currentFolderId path: ${currentFolderPath[0].id}")
+    Log.i(TAG, "folder: $currentFolderId path: ${currentFolderPath[0].id} $scanUUID ${scanUUID.isEmpty()}")
 
     uploadButton = binding.uploadBtn
     clearButton = binding.clearList

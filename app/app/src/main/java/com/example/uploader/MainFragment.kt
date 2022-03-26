@@ -9,6 +9,7 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.activity.addCallback
+import androidx.activity.result.ActivityResultLauncher
 import androidx.core.os.bundleOf
 import androidx.lifecycle.ViewModelProvider
 import androidx.navigation.fragment.findNavController
@@ -21,17 +22,22 @@ import com.example.uploader.folders.FolderAdapter
 import com.example.uploader.folders.Owner
 import com.example.uploader.folders.Path
 import com.example.uploader.utils.autoFitColumns
+import com.example.uploader.utils.webClientURL
 import com.example.uploader.viewmodels.FolderIdViewModel
 import com.example.uploader.viewmodels.FolderIdViewModelFactory
 import com.google.android.material.appbar.MaterialToolbar
 import com.google.android.material.bottomsheet.BottomSheetDialog
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.android.material.floatingactionbutton.FloatingActionButton
+import com.google.android.material.snackbar.Snackbar
 import com.google.android.material.textfield.TextInputLayout
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseUser
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.ListenerRegistration
+import com.google.zxing.integration.android.IntentIntegrator
+import com.journeyapps.barcodescanner.ScanContract
+import com.journeyapps.barcodescanner.ScanOptions
 
 
 class MainFragment : Fragment() {
@@ -242,6 +248,8 @@ class MainFragment : Fragment() {
     val view = layoutInflater.inflate(R.layout.new_bottom_sheet, null)
     val newFolderButton: FloatingActionButton = view.findViewById(R.id.new_folder)
     val newFileButton: FloatingActionButton = view.findViewById(R.id.new_file)
+    val scannerButton: FloatingActionButton = view.findViewById(R.id.scan)
+
     dialog.setContentView(view)
     dialog.show()
     newFolderButton.setOnClickListener {
@@ -253,6 +261,45 @@ class MainFragment : Fragment() {
       val folder =
         bundleOf("currentFolderId" to currentFolder.id, "currentFolderPath" to currentFolder.path)
       findNavController().navigate(R.id.uploadFragment, folder)
+    }
+    scannerButton.setOnClickListener {
+      dialog.dismiss()
+      val scanOptions = ScanOptions()
+      scanOptions.setDesiredBarcodeFormats(ScanOptions.QR_CODE)
+      scanOptions.setPrompt("Scan QR Code")
+      scanOptions.setBeepEnabled(false)
+      scannerLauncher.launch(scanOptions)
+    }
+  }
+
+  private val scannerLauncher = registerForActivityResult(
+    ScanContract()
+  ) { res ->
+    if (res.contents != null) {
+      this.scannerResult(res.contents)
+    }
+  }
+
+  private fun scannerResult(url: String) {
+    fun showSnackBar() {
+      Snackbar.make(
+        this.requireView(), "Make sure the QR is valid", Snackbar.LENGTH_LONG
+      ).show()
+    }
+
+    if (url.startsWith(webClientURL)) {
+      val shortUuid = url.split("/").last()
+      Log.i(TAG, shortUuid)
+      val uuid=shortUuid
+      val bundle = bundleOf(
+        "currentFolderId" to currentFolder.id,
+        "currentFolderPath" to currentFolder.path,
+        "uuid" to uuid
+      )
+      findNavController().navigate(R.id.uploadFragment,bundle)
+
+    } else {
+      showSnackBar()
     }
   }
 
