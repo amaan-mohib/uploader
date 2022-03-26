@@ -11,10 +11,10 @@ data class User(
 )
 
 data class Info(
-  @SerializedName("browserName") var browserName:String?= "App",
-  @SerializedName("OSName") var OSName:String?="Android",
-  @SerializedName("username") var username: String?="",
-  @SerializedName("time") var time:String?= LocalDateTime.now().toString(),
+  @SerializedName("browserName") var browserName: String? = "App",
+  @SerializedName("OSName") var OSName: String? = "Android " + android.os.Build.VERSION.RELEASE,
+  @SerializedName("username") var username: String? = "",
+  @SerializedName("time") var time: String? = LocalDateTime.now().toString(),
 )
 
 data class UserInfo(

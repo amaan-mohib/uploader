@@ -4,6 +4,8 @@ import android.app.Activity.RESULT_OK
 import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
+import android.os.Handler
+import android.os.Looper
 import android.util.Log
 import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
@@ -23,7 +25,11 @@ import com.example.uploader.files.File
 import com.example.uploader.files.FileUploadAdapter
 import com.example.uploader.folders.Owner
 import com.example.uploader.folders.Path
+import com.example.uploader.socketInfo.*
+import com.example.uploader.utils.SocketHandler
+import com.example.uploader.utils.getJSONObject
 import com.google.android.material.button.MaterialButton
+import com.google.android.material.snackbar.Snackbar
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseUser
 import com.google.firebase.firestore.FirebaseFirestore
@@ -32,6 +38,10 @@ import com.google.firebase.storage.StorageReference
 import com.google.firebase.storage.ktx.storage
 import com.google.firebase.storage.ktx.component1
 import com.google.firebase.storage.ktx.component2
+import io.socket.client.Ack
+import io.socket.client.Socket
+import org.json.JSONArray
+import org.json.JSONObject
 
 
 class UploadFragment : Fragment() {
@@ -49,9 +59,11 @@ class UploadFragment : Fragment() {
   private lateinit var fileAdapter: FileUploadAdapter
   private lateinit var fileRecyclerView: RecyclerView
   private lateinit var uploadButton: MaterialButton
+  private lateinit var showQRButton: MaterialButton
   private lateinit var clearButton: MaterialButton
   private lateinit var filesText: TextView
   private lateinit var progressBar: ProgressBar
+  private lateinit var socket: Socket
 
 //  override fun onCreate(savedInstanceState: Bundle?) {
 //    super.onCreate(savedInstanceState)
@@ -71,20 +83,53 @@ class UploadFragment : Fragment() {
   override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
     super.onViewCreated(view, savedInstanceState)
 
+    uploadButton = binding.uploadBtn
+    clearButton = binding.clearList
+    showQRButton = binding.showQrBtn
+
     val id = arguments?.getString("currentFolderId")
     currentFolderId = (id ?: currentUser?.uid) as String
     currentFolderPath =
       arguments?.getParcelableArrayList<Path>("currentFolderPath") as ArrayList<Path>
-    scanUUID = arguments?.getString("uuid")?:""
+    scanUUID = arguments?.getString("uuid") ?: ""
 
-    Log.i(TAG, "folder: $currentFolderId path: ${currentFolderPath[0].id} $scanUUID ${scanUUID.isEmpty()}")
+    Log.i(
+      TAG,
+      "folder: $currentFolderId path: ${currentFolderPath[0].id} $scanUUID ${scanUUID.isEmpty()}"
+    )
 
-    uploadButton = binding.uploadBtn
-    clearButton = binding.clearList
+    if (scanUUID.isNotEmpty()) {
+      socket = SocketHandler.getSocket()
+      emitInfo(socket, scanUUID)
 
-    binding.showQrBtn.setOnClickListener {
-      findNavController().navigate(R.id.QRFragment)
+      showQRButton.text = getString(R.string.disconnect)
+      showQRButton.setOnClickListener {
+        SocketHandler.reconnect()
+        findNavController().navigate(R.id.mainFragment)
+      }
+
+      socket.on("connected users") { args ->
+        if (args[0] != null) {
+          val users = args[0] as JSONObject
+          val connectedUsers = users.get("connected") as JSONArray
+          Log.i(TAG, "users: ${connectedUsers.length()}")
+          activity?.runOnUiThread {
+            if (connectedUsers.length() == 0) {
+              Snackbar.make(
+                view, "Host ended the session", Snackbar.LENGTH_LONG
+              ).show()
+              findNavController().navigate(R.id.mainFragment)
+            }
+          }
+        }
+      }
+    } else {
+      showQRButton.setOnClickListener {
+        findNavController().navigate(R.id.QRFragment)
+      }
     }
+
+
 
     clearButton.setOnClickListener {
       reset()
@@ -126,6 +171,26 @@ class UploadFragment : Fragment() {
     filesText.visibility = View.GONE
     progressBar.visibility = View.GONE
     fileAdapter.notifyItemRangeRemoved(0, items)
+  }
+
+  private fun emitInfo(socket: Socket, uuid: String) {
+    val data = UserInfo(
+      uuid = uuid,
+      user = User(
+        sid = socket.id(),
+        uid = currentUser?.uid,
+        host = false,
+        info = Info(username = currentUser?.displayName)
+      )
+    )
+//    val jsonData= Gson().toJson(data)
+//    Log.i(TAG,jsonData)
+    socket.emit("join", getJSONObject(data), Ack { args ->
+      if (args.isNotEmpty()) {
+        val error = args[0]
+        Log.e(QRFragment.TAG, "callback error $error")
+      }
+    })
   }
 
   private val getContent = registerForActivityResult(
@@ -214,10 +279,35 @@ class UploadFragment : Fragment() {
       if (task.isSuccessful) {
         val downloadUri = task.result
         saveFile(name, type, size, downloadUri.toString(), index)
+        if (scanUUID.isNotEmpty()) emitFile(name, type, size, downloadUri.toString())
       } else {
         Log.e(TAG, "failed: ${task.result}")
       }
     }
+  }
+
+  private fun emitFile(name: String?, type: String?, size: Long?, url: String) {
+    val file = FileInfo(
+      uuid = scanUUID,
+      files = Files(
+        name = name,
+        type = type,
+        size = size,
+        url = url,
+        parentId = currentFolderId,
+        sentBy = SentBy(
+          currentUser?.uid,
+          currentUser?.displayName,
+          currentUser?.photoUrl.toString()
+        )
+      )
+    )
+    socket.emit("send files", getJSONObject(file), Ack { args ->
+      if (args.isNotEmpty()) {
+        val error = args[0]
+        Log.e(TAG, "callback error $error")
+      }
+    })
   }
 
   private fun saveFile(name: String?, type: String?, size: Long?, url: String, index: Int) {

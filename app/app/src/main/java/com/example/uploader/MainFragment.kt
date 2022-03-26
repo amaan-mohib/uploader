@@ -9,8 +9,9 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.activity.addCallback
-import androidx.activity.result.ActivityResultLauncher
+import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.core.os.bundleOf
+import androidx.fragment.app.viewModels
 import androidx.lifecycle.ViewModelProvider
 import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.RecyclerView
@@ -21,10 +22,10 @@ import com.example.uploader.folders.Folder
 import com.example.uploader.folders.FolderAdapter
 import com.example.uploader.folders.Owner
 import com.example.uploader.folders.Path
-import com.example.uploader.utils.autoFitColumns
-import com.example.uploader.utils.webClientURL
+import com.example.uploader.utils.*
 import com.example.uploader.viewmodels.FolderIdViewModel
 import com.example.uploader.viewmodels.FolderIdViewModelFactory
+import com.example.uploader.viewmodels.UUIDViewModel
 import com.google.android.material.appbar.MaterialToolbar
 import com.google.android.material.bottomsheet.BottomSheetDialog
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
@@ -35,9 +36,13 @@ import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseUser
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.ListenerRegistration
-import com.google.zxing.integration.android.IntentIntegrator
 import com.journeyapps.barcodescanner.ScanContract
 import com.journeyapps.barcodescanner.ScanOptions
+import io.socket.client.Socket
+import retrofit2.Call
+import retrofit2.Callback
+import retrofit2.Response
+import retrofit2.create
 
 
 class MainFragment : Fragment() {
@@ -46,6 +51,8 @@ class MainFragment : Fragment() {
   private lateinit var fileRecyclerView: RecyclerView
   private lateinit var folderRecyclerView: RecyclerView
   private lateinit var toolbar: MaterialToolbar
+  private lateinit var mainConstraintLayout: ConstraintLayout
+  private lateinit var mainSpinner: ConstraintLayout
 
   private var currentFolder: Folder = Folder()
 
@@ -62,6 +69,8 @@ class MainFragment : Fragment() {
 
   private lateinit var folderModel: FolderIdViewModel
   private lateinit var folderIdViewModelFactory: FolderIdViewModelFactory
+  private val UUIDViewModel by viewModels<UUIDViewModel>()
+  private lateinit var socket: Socket
 
 //  override fun onCreate(savedInstanceState: Bundle?) {
 //    super.onCreate(savedInstanceState)
@@ -82,8 +91,11 @@ class MainFragment : Fragment() {
 
   override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
     super.onViewCreated(view, savedInstanceState)
+
     binding.newBtn.setOnClickListener { showNewBottomSheet(requireContext()) }
     toolbar = binding.toolbar
+    mainConstraintLayout = binding.mainConstraintLayout
+    mainSpinner = binding.mainSpinner
 
     fileRecyclerView = binding.fileList
     fileRecyclerView.autoFitColumns()
@@ -133,6 +145,8 @@ class MainFragment : Fragment() {
         toolbar.navigationIcon = null
         toolbar.menu.findItem(R.id.share_menu).isVisible = false
       } else {
+        mainConstraintLayout.visibility = View.GONE
+        mainSpinner.visibility = View.VISIBLE
         toolbar.menu.findItem(R.id.share_menu).isVisible = true
       }
 
@@ -153,6 +167,8 @@ class MainFragment : Fragment() {
           toolbar.setNavigationOnClickListener {
             folderModel.parentId.value = currentFolder.parentId
           }
+          mainConstraintLayout.visibility = View.VISIBLE
+          mainSpinner.visibility = View.GONE
         } else {
           currentFolder = Folder()
           Log.i(TAG, "No such document")
@@ -290,17 +306,67 @@ class MainFragment : Fragment() {
     if (url.startsWith(webClientURL)) {
       val shortUuid = url.split("/").last()
       Log.i(TAG, shortUuid)
-      val uuid=shortUuid
-      val bundle = bundleOf(
-        "currentFolderId" to currentFolder.id,
-        "currentFolderPath" to currentFolder.path,
-        "uuid" to uuid
-      )
-      findNavController().navigate(R.id.uploadFragment,bundle)
-
+      mainConstraintLayout.visibility = View.GONE
+      mainSpinner.visibility = View.VISIBLE
+      getUUID(shortUuid)
+      UUIDViewModel.uuid.observe(viewLifecycleOwner) { uuid ->
+        if (uuid.isNotEmpty() && uuid != "Failed") {
+          val bundle = bundleOf(
+            "currentFolderId" to currentFolder.id,
+            "currentFolderPath" to currentFolder.path,
+            "uuid" to uuid
+          )
+          findNavController().navigate(R.id.uploadFragment, bundle)
+        } else {
+          if (uuid == "Failed") {
+            showSnackBar()
+            mainConstraintLayout.visibility = View.VISIBLE
+            mainSpinner.visibility = View.GONE
+          }
+        }
+      }
     } else {
       showSnackBar()
     }
+  }
+
+  private fun getUUID(shortUuid: String) {
+    val uuidApi = RetrofitHelper.getInstance().create<ApiInterface>()
+    uuidApi.getUUID(shortUuid).enqueue(object : Callback<String> {
+      override fun onResponse(call: Call<String>, response: Response<String>) {
+        val res = response.body()
+        if (response.code() == 200 && res != null) {
+          Log.i(TAG, "uuid: $res")
+//          UUIDViewModel.uuid.value=res.toString()
+          getIsUsers(res.toString())
+        }
+      }
+
+      override fun onFailure(call: Call<String>, t: Throwable) {
+        UUIDViewModel.uuid.value = "Failed"
+        Log.e(TAG, "failed")
+      }
+    })
+  }
+
+  private fun getIsUsers(uuid: String) {
+    val uuidApi = RetrofitHelper.getInstance().create<ApiInterface>()
+    uuidApi.getIsUsers(uuid).enqueue(object : Callback<Boolean> {
+      override fun onResponse(call: Call<Boolean>, response: Response<Boolean>) {
+        val res = response.body()
+        if (response.code() == 200 && res != null) {
+          Log.i(TAG, "is users: $res")
+          if (res)
+            UUIDViewModel.uuid.value = uuid
+          else UUIDViewModel.uuid.value = "Failed"
+        }
+      }
+
+      override fun onFailure(call: Call<Boolean>, t: Throwable) {
+        UUIDViewModel.uuid.value = "Failed"
+        Log.e(TAG, "failed")
+      }
+    })
   }
 
   companion object {

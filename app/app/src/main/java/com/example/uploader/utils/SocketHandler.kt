@@ -1,5 +1,7 @@
 package com.example.uploader.utils
 
+import android.os.Handler
+import android.os.Looper
 import android.util.Log
 import io.socket.client.IO
 import io.socket.client.Socket
@@ -33,7 +35,15 @@ object SocketHandler {
   }
 
   @Synchronized
-  fun isConnected():Boolean {
+  fun isConnected(): Boolean {
     return mSocket.connected()
+  }
+
+  @Synchronized
+  fun reconnect() {
+    mSocket.disconnect()
+    Handler(Looper.getMainLooper()).postDelayed({
+      mSocket.connect()
+    }, 1000)
   }
 }

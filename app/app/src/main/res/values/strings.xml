@@ -105,4 +105,6 @@
     <string name="upload">Upload (%1$d)</string>
     <string name="device_connected">%1d device(s) connected</string>
     <string name="received_files">Received Files (%1d)</string>
+    <string name="show_qr_btn_text">Show QR instead</string>
+    <string name="disconnect">Disconnect</string>
 </resources>

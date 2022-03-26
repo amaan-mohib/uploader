@@ -10,7 +10,9 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.ImageView
 import android.widget.TextView
+import androidx.activity.addCallback
 import androidx.fragment.app.viewModels
+import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.example.uploader.databinding.FragmentQrBinding
@@ -106,6 +108,9 @@ class QRFragment : Fragment() {
       }
     }
 
+    requireActivity().onBackPressedDispatcher.addCallback(viewLifecycleOwner) {
+      findNavController().navigate(R.id.mainFragment)
+    }
   }
 
   private fun getReceivedFiles(socket: Socket) {
@@ -193,8 +198,6 @@ class QRFragment : Fragment() {
         Log.e(TAG, "failed")
       }
     })
-
-
   }
 
   private fun generateQR(uuid: String): Bitmap {
@@ -215,6 +218,11 @@ class QRFragment : Fragment() {
     }
 
     return bitmap
+  }
+
+  override fun onDestroyView() {
+    super.onDestroyView()
+    SocketHandler.reconnect()
   }
 
   companion object {
