@@ -22,6 +22,7 @@ import { getDownloadURL, uploadBytesResumable } from "firebase/storage";
 import { useState } from "react";
 import { useAuth } from "../context/AuthProvider";
 import { useFolder } from "../context/FolderProvider";
+import fileSystem from "../model/fileSystem";
 import { createDocRef, createStorageRef } from "../utils/firebase";
 import { formatSize } from "../utils/format";
 import socket from "../utils/socket";
@@ -107,7 +108,7 @@ const UploadComp = ({ isScanner = false, uuid = "" }) => {
                 size: file.size,
                 url: downloadURL,
                 parentId: folderId,
-                path,
+                // path: fileSystem.currentDirectoryPath,
                 owner: {
                   displayName: user.displayName,
                   photoURL: user.photoURL,

@@ -9,31 +9,23 @@ import { getDoc } from "firebase/firestore";
 
 function App() {
   const { id } = useParams();
-  const { setFolderId, setPath } = useFolder();
+  const { setFolderId } = useFolder();
   const { user } = useAuth();
   const navigate = useNavigate();
   useEffect(async () => {
     if (id) {
       if (id === "shared") {
         setFolderId("shared");
-        setPath([
-          { id: "/", name: "Home" },
-          { id: "//shared", name: "Shared" },
-        ]);
       } else {
         setFolderId(id);
         const docRef = createOnlyDocRef(`users/${user.uid}/folders/${id}`);
         const docSnap = await getDoc(docRef);
-        if (docSnap.exists()) {
-          const data = docSnap.data();
-          setPath(data.path);
-        } else {
+        if (!docSnap.exists()) {
           navigate("/error");
         }
       }
     } else {
       setFolderId(user.uid);
-      setPath([{ id: "/", name: "Home" }]);
     }
   }, [id]);
   return <Home />;

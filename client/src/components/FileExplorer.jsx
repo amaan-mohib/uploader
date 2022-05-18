@@ -47,6 +47,7 @@ import { Link, useNavigate, useParams } from "react-router-dom";
 import Viewer from "react-viewer";
 import { useAuth } from "../context/AuthProvider";
 import { useFolder } from "../context/FolderProvider";
+import fileSystem from "../model/fileSystem";
 import {
   createCollectionRef,
   createDocRef,
@@ -515,6 +516,21 @@ const ContextMenuPreview = ({ file, setVisible, setIndex, index }) => {
 
 export const Details = ({ onClose, open, file }) => {
   const { user } = useAuth();
+  const [path, setPath] = useState({
+    id: user ? user.uid : file.parentId,
+    name: "Home"
+  })
+
+  useEffect(() => {
+    const dir = fileSystem.findDirectory(fileSystem.root, file.parentId);
+    if (dir) {
+      setPath({
+        id: dir.id,
+        name: dir.name,
+      });
+    }
+  }, [])
+
   return (
     <Dialog onClose={onClose} open={open}>
       <DialogTitle>
@@ -573,18 +589,14 @@ export const Details = ({ onClose, open, file }) => {
             <ListItem
               component={Link}
               to={
-                file.path[file.path.length - 1].id.split("/").pop()
-                  ? `/folder/${file.path[file.path.length - 1].id
-                      .split("/")
-                      .pop()}`
-                  : "/"
+                path.name === "Home" ? "/" : `/folder/${path.id}`
               }>
               <ListItemIcon>
                 <FolderOutlined />
               </ListItemIcon>
               <ListItemText
                 primary="Location"
-                secondary={`${file.path[file.path.length - 1].name}`}
+                secondary={`${path.name}`}
               />
             </ListItem>
           )}

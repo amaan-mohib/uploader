@@ -5,9 +5,9 @@ import { auth } from "../utils/firebase";
 import FolderProvider from "./FolderProvider";
 
 const AuthContext = createContext({
-  user: null,
+  user: { uid: null, displayName: "", email: "" },
   loading: true,
-  logout: () => {},
+  logout: () => { },
 });
 
 export const useAuth = () => {

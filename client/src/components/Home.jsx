@@ -1,6 +1,7 @@
 import {
   ContentCopyOutlined,
   CreateNewFolderOutlined,
+  DriveFileRenameOutline,
   KeyboardArrowDown,
   ShareOutlined,
 } from "@mui/icons-material";
@@ -20,12 +21,13 @@ import { useAuth } from "../context/AuthProvider";
 import { useFolder } from "../context/FolderProvider";
 import { HomeURL } from "../utils/format";
 import FileExplorer from "./FileExplorer";
-import NewFolder from "./NewFolder";
+import NewFolder, { Rename } from "./NewFolder";
 
 const Home = () => {
   const { path } = useFolder();
   const { user } = useAuth();
   const [folder, setFolder] = useState(false);
+  const [rename, setRename] = useState(false);
   const [anchorEl, setAnchorEl] = useState(null);
   const open = Boolean(anchorEl);
   const handleMenu = (event) => {
@@ -34,21 +36,22 @@ const Home = () => {
   const handleMenuClose = () => {
     setAnchorEl(null);
   };
+
   return (
     <div>
       <Breadcrumbs maxItems={4} aria-label="breadcrumb">
         {path.map((currentPath, index) =>
           index !== path.length - 1 ? (
             <Button
-              disabled={currentPath.id === "//shared"}
+              disabled={currentPath.id === "shared"}
               key={currentPath.id}
               color="inherit"
               style={{ textTransform: "none" }}
               component={Link}
               to={
-                currentPath.id.split("/").pop()
-                  ? `/folder/${currentPath.id.split("/").pop()}`
-                  : "/"
+                currentPath.id === user?.uid
+                  ? "/"
+                  : `/folder/${currentPath.id}`
               }>
               {currentPath.name}
             </Button>
@@ -56,7 +59,7 @@ const Home = () => {
             <div key={currentPath.id}>
               <Button
                 id="basic-button"
-                disabled={currentPath.id === "//shared"}
+                disabled={currentPath.id === "shared"}
                 key={currentPath.id}
                 color="primary"
                 style={{ textTransform: "none" }}
@@ -86,13 +89,23 @@ const Home = () => {
                     <ListItemText>New Folder</ListItemText>
                   </MenuItem>
                   {currentPath.name !== "Home" &&
+                    <MenuItem
+                      onClick={() => {
+                        setRename(true);
+                        handleMenuClose();
+                      }}>
+                      <ListItemIcon>
+                        <DriveFileRenameOutline fontSize="small" />
+                      </ListItemIcon>
+                      <ListItemText>Rename</ListItemText>
+                    </MenuItem>
+                  }
+                  {currentPath.name !== "Home" &&
                     (navigator.share ? (
                       <MenuItem
                         onClick={() => {
                           navigator.share({
-                            url: `${HomeURL}/folder/${user.uid}/${currentPath.id
-                              .split("/")
-                              .pop()}`,
+                            url: `${HomeURL}/folder/${user.uid}/${currentPath.id}`,
                             text: currentPath.name,
                             title: "Share Folder",
                           });
@@ -107,9 +120,7 @@ const Home = () => {
                       <MenuItem
                         onClick={() => {
                           navigator.clipboard.writeText(
-                            `${HomeURL}/folder/${user.uid}/${currentPath.id
-                              .split("/")
-                              .pop()}`
+                            `${HomeURL}/folder/${user.uid}/${currentPath.id}`
                           );
                           handleMenuClose();
                         }}>
@@ -122,6 +133,7 @@ const Home = () => {
                 </MenuList>
               </Menu>
               <NewFolder open={folder} handleClose={() => setFolder(false)} />
+              <Rename open={rename} handleClose={() => setRename(false)} folder={currentPath} />
             </div>
           )
         )}
