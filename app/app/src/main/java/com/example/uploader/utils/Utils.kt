@@ -13,7 +13,8 @@ fun RecyclerView.autoFitColumns(columnWidth:Int=200){
 }
 
 const val webClientURL="https://delta-uploader.web.app"
-const val serverURL="https://delta-uploader-api.herokuapp.com"
+// const val serverURL="https://delta-uploader-api.herokuapp.com"
+const val serverURL="https://uploader-krv6.onrender.com"
 
 fun getTypeIcon(type: String?): Int {
   return when (type) {
